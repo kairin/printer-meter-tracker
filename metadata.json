@@ -1,0 +1,6 @@
+{
+  "name": "Printer Meter Tracker",
+  "description": "A web application to track printer meter readings, manage printer inventory, and view reading history.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
