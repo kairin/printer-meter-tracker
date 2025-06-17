@@ -3,32 +3,35 @@ name: Deploy React App to GitHub Pages
 on:
   push:
     branches:
-      - main # Trigger this workflow whenever there's a push to the 'main' branch
+      - main
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest # Use an Ubuntu runner for the build process
+    runs-on: ubuntu-latest
+
+    permissions: # <-- ADD THIS BLOCK
+      contents: write # Grant write permission for the GITHUB_TOKEN
+      pages: write # Needed for deploying to GitHub Pages
+      id-token: write # Recommended for OIDC authentication by actions
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4 # Action to check out your repository code
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4 # Action to set up Node.js environment
+        uses: actions/setup-node@v4
         with:
-          node-version: '22' # Changed to Node.js version 22 (LTS)
-          # cache: 'npm' # This line remains commented out/removed due to package-lock.json issue
+          node-version: '22'
 
       - name: Install dependencies
-        run: npm install # Install all project dependencies
+        run: npm install
 
       - name: Build React app
-        run: npm run build # Run your React app's build script
+        run: npm run build
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4 # A popular action for deploying to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }} # Automatically provided by GitHub Actions
-          publish_dir: ./build # The directory containing your built static files
-          publish_branch: gh-pages # The branch to deploy to (GitHub Pages serves from this branch)
-          # cname: example.com # Uncomment and set if you use a custom domain
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build
+          publish_branch: gh-pages
