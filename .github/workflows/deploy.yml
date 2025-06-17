@@ -16,8 +16,8 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4 # Action to set up Node.js environment
         with:
-          node-version: '20' # Specify the Node.js version you want to use (e.g., '18', '20', or '22' LTS)
-          cache: 'npm' # Cache npm dependencies for faster builds
+          node-version: '22' # Changed to Node.js version 22 (LTS)
+          # cache: 'npm' # This line remains commented out/removed due to package-lock.json issue
 
       - name: Install dependencies
         run: npm install # Install all project dependencies
