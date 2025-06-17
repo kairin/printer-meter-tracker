@@ -1,4 +1,3 @@
-
 # Transition Plan: Migrating Printer Meter Tracker to DuckDB-WASM
 
 ## 1. Introduction and Goal
