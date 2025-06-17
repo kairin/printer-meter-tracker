@@ -1,0 +1,10 @@
+{
+  "files": {
+    "main.js": "/printer-meter-tracker/static/js/main.d099793b.js",
+    "index.html": "/printer-meter-tracker/index.html",
+    "main.d099793b.js.map": "/printer-meter-tracker/static/js/main.d099793b.js.map"
+  },
+  "entrypoints": [
+    "static/js/main.d099793b.js"
+  ]
+}
