@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Report</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { margin: 0; font-family: 'Arial', sans-serif; background-color: #f3f4f6; color: #333; }
+        #root { padding: 20px; }
+        .table-container { background-color: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+        th { background-color: #f9fafb; font-weight: 600; color: #374151; cursor: pointer; }
+        th:hover { background-color: #f3f4f6; }
+        tr:hover { background-color: #f9fafb; }
+        .pagination button, .controls input, .controls select {
+            margin: 0 5px;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            background-color: white;
+            cursor: pointer;
+        }
+        .pagination button:hover, .controls select:hover, .controls input:hover { background-color: #f3f4f6; }
+        .pagination button:disabled { cursor: not-allowed; opacity: 0.5; }
+        .controls { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;}
+        .search-input { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 4px; min-width: 200px; }
+        .header-icon { margin-left: 5px; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // THIS IS THE REQUIRED PLACEHOLDER LINE:
+        const embeddedInvoiceData = [];
+
+        const App = () => {
+            const [data, setData] = React.useState(embeddedInvoiceData);
+            const [searchTerm, setSearchTerm] = React.useState('');
+            const [sortConfig, setSortConfig] = React.useState({ key: null, direction: 'ascending' });
+            const [currentPage, setCurrentPage] = React.useState(1);
+            const [itemsPerPage, setItemsPerPage] = React.useState(10);
+
+            const headers = React.useMemo(() => {
+                if (data.length === 0) return [];
+                return Object.keys(data[0]);
+            }, [data]);
+
+            const sortedFilteredData = React.useMemo(() => {
+                let filteredData = data.filter(item =>
+                    headers.some(header =>
+                        String(item[header]).toLowerCase().includes(searchTerm.toLowerCase())
+                    )
+                );
+
+                if (sortConfig.key !== null) {
+                    filteredData.sort((a, b) => {
+                        if (a[sortConfig.key] < b[sortConfig.key]) {
+                            return sortConfig.direction === 'ascending' ? -1 : 1;
+                        }
+                        if (a[sortConfig.key] > b[sortConfig.key]) {
+                            return sortConfig.direction === 'ascending' ? 1 : -1;
+                        }
+                        return 0;
+                    });
+                }
+                return filteredData;
+            }, [data, searchTerm, sortConfig, headers]);
+
+            const paginatedData = React.useMemo(() => {
+                const startIndex = (currentPage - 1) * itemsPerPage;
+                return sortedFilteredData.slice(startIndex, startIndex + itemsPerPage);
+            }, [sortedFilteredData, currentPage, itemsPerPage]);
+
+            const totalPages = Math.ceil(sortedFilteredData.length / itemsPerPage);
+
+            const requestSort = (key) => {
+                let direction = 'ascending';
+                if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+                    direction = 'descending';
+                }
+                setSortConfig({ key, direction });
+                setCurrentPage(1); // Reset to first page on sort
+            };
+
+            const SortIcon = ({ direction }) => {
+                if (!direction) return <span className="header-icon">↕</span>;
+                return direction === 'ascending' ? <span className="header-icon">↑</span> : <span className="header-icon">↓</span>;
+            };
+
+            if (!data || data.length === 0) {
+                return (
+                    <div className="text-center p-8">
+                        <h1 className="text-2xl font-semibold mb-4">Invoice Report</h1>
+                        <p className="text-gray-600">No invoice data loaded or data is empty. Ensure 'input.csv' is processed correctly.</p>
+                        <p className="text-gray-500 text-sm mt-2">Placeholder line for data injection: <code>const embeddedInvoiceData = [];</code></p>
+                    </div>
+                );
+            }
+
+            return (
+                <div>
+                    <h1 className="text-3xl font-bold mb-6 text-center text-gray-700">Invoice Report</h1>
+                    <div className="controls">
+                        <input
+                            type="text"
+                            placeholder={`Search across ${headers.length} columns...`}
+                            className="search-input"
+                            value={searchTerm}
+                            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                        />
+                        <div>
+                            <label htmlFor="itemsPerPage" className="mr-2 text-sm text-gray-600">Rows:</label>
+                            <select
+                                id="itemsPerPage"
+                                value={itemsPerPage}
+                                onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1);}}
+                                className="border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                            >
+                                <option value={5}>5</option>
+                                <option value={10}>10</option>
+                                <option value={20}>20</option>
+                                <option value={50}>50</option>
+                                <option value={100}>100</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div className="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    {headers.map(header => (
+                                        <th key={header} onClick={() => requestSort(header)}>
+                                            {header.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                            {sortConfig.key === header ? <SortIcon direction={sortConfig.direction} /> : <SortIcon direction={null} />}
+                                        </th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {paginatedData.length > 0 ? paginatedData.map((row, index) => (
+                                    <tr key={index}>
+                                        {headers.map(header => (
+                                            <td key={header}>{String(row[header])}</td>
+                                        ))}
+                                    </tr>
+                                )) : (
+                                    <tr>
+                                        <td colSpan={headers.length} className="text-center py-4">No matching records found.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                    {totalPages > 1 && (
+                        <div className="pagination mt-6 flex justify-center items-center">
+                            <button onClick={() => setCurrentPage(c => Math.max(1, c - 1))} disabled={currentPage === 1}>
+                                Previous
+                            </button>
+                            <span className="mx-3 text-sm text-gray-700">
+                                Page {currentPage} of {totalPages}
+                            </span>
+                            <button onClick={() => setCurrentPage(c => Math.min(totalPages, c + 1))} disabled={currentPage === totalPages}>
+                                Next
+                            </button>
+                        </div>
+                    )}
+                     <div className="mt-8 text-center text-xs text-gray-500">
+                        <p>This report is dynamically generated. Data is embedded directly within this HTML file.</p>
+                        <p>Search, sort, and pagination are handled client-side by React.</p>
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
